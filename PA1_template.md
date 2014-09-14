@@ -1,10 +1,5 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-author: "Peng Cheng Zhang"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
+Peng Cheng Zhang  
 
 
 ## Loading and preprocessing the data
