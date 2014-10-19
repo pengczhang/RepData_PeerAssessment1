@@ -62,7 +62,20 @@ median(Totalsteps2[[2]])
 ```
 ## Are there differences in activity patterns between weekdays and weekends?
 
-Almost done
+dayorend<-Imp_activity$Wday
+dayorend[Imp_activity$Wday != c(1,7)] <-"Weekday"
+dayorend[Imp_activity$Wday == c(1,7)] <-"Weekend"
+IActivity<-cbind(Imp_activity,dayorend)
 
+int_mean2<-summarise(group_by(IActivity,dayorend,interval), Interval_mean=mean(steps))
 
+library(ggplot2)
+g <- qplot(interval, Interval_mean, data = int_mean2, facets = dayorend ~ .)
+p <- g + geom_point(color = "dark red") +
+     geom_line(color = "dark red") +
+     labs(x = "Interval [Minutes]") +
+     labs(y = expression("Average number of steps per interval across all days [Steps]")) +
+     labs(title ="Average number of steps per interval across all days per day type")
+ 
+print(p)
 
