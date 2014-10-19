@@ -21,19 +21,45 @@ activity<-mutate(activity, Year=year(date), Month=month(date), Mday=mday(date),W
 ## What is mean total number of steps taken per day?
 
 ```{r}
-summarise(group_by(activity, date), sum(steps))
+Totalsteps<-summarise(group_by(activity, date), sum(steps))
 
-summarise(group_by(activity, date), Mean_Steps=mean(steps, na.rm=TRUE))
+hist(Totalsteps$sum, breaks=10, xlab="Total number of steps per day", main="Histogram of Total number of steps taken per day")
 
-summarise(group_by(activity, date), Median_Steps=median(steps, na.rm=TRUE))
+mean(Totalsteps[[2]],na.rm=TRUE)
+
+median(Totalsteps[[2]],na.rm=TRUE)
 ```
 
 ## What is the average daily activity pattern?
 
+```{r}
+int_mean<-summarise(group_by(activity,interval), Interval_mean=mean(steps,na.rm=TRUE))
+
+plot(int_mean$interval,int_mean$Interval_mean,"l",main="Time Series of Average Steps Taken Across All Days", xlab="Interval",ylab="Average steps per interval")
 
 
+int_mean[which.max(int_mean$Interval_mean),]
+
+
+```
 ## Imputing missing values
 
+```{r}
+sum(is.na(activity$steps))
 
+Imp_activity<-mutate(group_by(activity,interval), avg_per_int=round(mean(steps,na.rm=TRUE)))
 
+Imp_activity[is.na(Imp_activity)]<-Imp_activity$avg_per_int[is.na(Imp_activity)]
+
+Totalsteps2<-summarise(group_by(Imp_activity, date), sum(steps))
+
+hist(Totalsteps2$sum, breaks=10, xlab="Total number of steps per day", main="Histogram of Total number of steps taken per day with simulated")
+
+mean(Totalsteps2[[2]])
+
+median(Totalsteps2[[2]])
+
+```
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
