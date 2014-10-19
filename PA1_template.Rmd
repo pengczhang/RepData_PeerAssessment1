@@ -62,4 +62,7 @@ median(Totalsteps2[[2]])
 ```
 ## Are there differences in activity patterns between weekdays and weekends?
 
+Almost done
+
+
 
