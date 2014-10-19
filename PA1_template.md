@@ -2,8 +2,8 @@
 Peng Cheng Zhang  
 
 
-## Loading and preprocessing the data
-
+## 1. Loading and preprocessing the data
+Before anything else, some packages that will be used are loaded.
 
 ```r
 library(dplyr)
@@ -24,234 +24,131 @@ library(dplyr)
 
 ```r
 library(lubridate)
+library(ggplot2)
+```
+
+The data is load into R with the read.csv function.
+It's converted into tbl_df form and stored as activity, with the Date parsed out separately.
+
+
+```r
 act1<-read.csv("./activity.csv")
 activity<-tbl_df(act1)
 rm("act1")
 activity<-mutate(activity, Year=year(date), Month=month(date), Mday=mday(date),Wday=wday(date))
 ```
 
-## What is mean total number of steps taken per day?
+## 2. What is mean total number of steps taken per day?
+
+Using the dplyr package tools, total number of steps taken per day is calculated and then plotted using the base plotting system as a histogram.
+
+```r
+Totalsteps<-summarise(group_by(activity, date), sum(steps))
+
+hist(Totalsteps$sum, breaks=10, xlab="Total number of steps per day", main="Histogram of Total number of steps taken per day")
+```
+
+![plot of chunk unnamed-chunk-3](./PA1_template_files/figure-html/unnamed-chunk-3.png) 
+
+The mean and median total number of steps per day are calculated.
+
+```r
+meansteps1<-mean(Totalsteps[[2]],na.rm=TRUE)
+
+mediansteps1<-median(Totalsteps[[2]],na.rm=TRUE)
+```
+Looks like the mean total number of steps per day is 1.0766 &times; 10<sup>4</sup>, and the median number of steps per day is 10765.
+Note: that NA values are ignored in these calculations.
+
+## 3. What is the average daily activity pattern?
+
+To look at the average daily activity, the average number of steps taken during each 5 minute interval across all days are calculated. 
+It is then plotted as time series using a line.
+
+```r
+int_mean<-summarise(group_by(activity,interval), Interval_mean=mean(steps,na.rm=TRUE))
+
+plot(int_mean$interval,int_mean$Interval_mean,"l",main="Time Series of Average Steps Taken Across All Days", xlab="Interval",ylab="Average steps per interval")
+```
+
+![plot of chunk unnamed-chunk-5](./PA1_template_files/figure-html/unnamed-chunk-5.png) 
+
+For the data collected, we can find the the most active time interval across all days. It looks like interval 835 contains the maximum number of steps.
 
 
 ```r
-summarise(group_by(activity, date), sum(steps))
+int_mean[which.max(int_mean$Interval_mean),]
 ```
 
 ```
-## Source: local data frame [61 x 2]
+## Source: local data frame [1 x 2]
 ## 
-##          date sum(steps)
-## 1  2012-10-01         NA
-## 2  2012-10-02        126
-## 3  2012-10-03      11352
-## 4  2012-10-04      12116
-## 5  2012-10-05      13294
-## 6  2012-10-06      15420
-## 7  2012-10-07      11015
-## 8  2012-10-08         NA
-## 9  2012-10-09      12811
-## 10 2012-10-10       9900
-## 11 2012-10-11      10304
-## 12 2012-10-12      17382
-## 13 2012-10-13      12426
-## 14 2012-10-14      15098
-## 15 2012-10-15      10139
-## 16 2012-10-16      15084
-## 17 2012-10-17      13452
-## 18 2012-10-18      10056
-## 19 2012-10-19      11829
-## 20 2012-10-20      10395
-## 21 2012-10-21       8821
-## 22 2012-10-22      13460
-## 23 2012-10-23       8918
-## 24 2012-10-24       8355
-## 25 2012-10-25       2492
-## 26 2012-10-26       6778
-## 27 2012-10-27      10119
-## 28 2012-10-28      11458
-## 29 2012-10-29       5018
-## 30 2012-10-30       9819
-## 31 2012-10-31      15414
-## 32 2012-11-01         NA
-## 33 2012-11-02      10600
-## 34 2012-11-03      10571
-## 35 2012-11-04         NA
-## 36 2012-11-05      10439
-## 37 2012-11-06       8334
-## 38 2012-11-07      12883
-## 39 2012-11-08       3219
-## 40 2012-11-09         NA
-## 41 2012-11-10         NA
-## 42 2012-11-11      12608
-## 43 2012-11-12      10765
-## 44 2012-11-13       7336
-## 45 2012-11-14         NA
-## 46 2012-11-15         41
-## 47 2012-11-16       5441
-## 48 2012-11-17      14339
-## 49 2012-11-18      15110
-## 50 2012-11-19       8841
-## 51 2012-11-20       4472
-## 52 2012-11-21      12787
-## 53 2012-11-22      20427
-## 54 2012-11-23      21194
-## 55 2012-11-24      14478
-## 56 2012-11-25      11834
-## 57 2012-11-26      11162
-## 58 2012-11-27      13646
-## 59 2012-11-28      10183
-## 60 2012-11-29       7047
-## 61 2012-11-30         NA
+##     interval Interval_mean
+## 104      835         206.2
 ```
+
+## 4. Imputing missing values
+
+There seems to be ` r sum(is.na(activity$steps))` number of missing data points.
+
+To fill in the missing data. We can just use a rounded average number of steps across all day for that interval.
+We can then create a new data set now called Imp_Activity.
+
 
 ```r
-summarise(group_by(activity, date), Mean_Steps=mean(steps, na.rm=TRUE))
+Imp_activity<-mutate(group_by(activity,interval), avg_per_int=round(mean(steps,na.rm=TRUE)))
+
+Imp_activity[is.na(Imp_activity)]<-Imp_activity$avg_per_int[is.na(Imp_activity)]
 ```
 
-```
-## Source: local data frame [61 x 2]
-## 
-##          date Mean_Steps
-## 1  2012-10-01        NaN
-## 2  2012-10-02     0.4375
-## 3  2012-10-03    39.4167
-## 4  2012-10-04    42.0694
-## 5  2012-10-05    46.1597
-## 6  2012-10-06    53.5417
-## 7  2012-10-07    38.2465
-## 8  2012-10-08        NaN
-## 9  2012-10-09    44.4826
-## 10 2012-10-10    34.3750
-## 11 2012-10-11    35.7778
-## 12 2012-10-12    60.3542
-## 13 2012-10-13    43.1458
-## 14 2012-10-14    52.4236
-## 15 2012-10-15    35.2049
-## 16 2012-10-16    52.3750
-## 17 2012-10-17    46.7083
-## 18 2012-10-18    34.9167
-## 19 2012-10-19    41.0729
-## 20 2012-10-20    36.0938
-## 21 2012-10-21    30.6285
-## 22 2012-10-22    46.7361
-## 23 2012-10-23    30.9653
-## 24 2012-10-24    29.0104
-## 25 2012-10-25     8.6528
-## 26 2012-10-26    23.5347
-## 27 2012-10-27    35.1354
-## 28 2012-10-28    39.7847
-## 29 2012-10-29    17.4236
-## 30 2012-10-30    34.0938
-## 31 2012-10-31    53.5208
-## 32 2012-11-01        NaN
-## 33 2012-11-02    36.8056
-## 34 2012-11-03    36.7049
-## 35 2012-11-04        NaN
-## 36 2012-11-05    36.2465
-## 37 2012-11-06    28.9375
-## 38 2012-11-07    44.7326
-## 39 2012-11-08    11.1771
-## 40 2012-11-09        NaN
-## 41 2012-11-10        NaN
-## 42 2012-11-11    43.7778
-## 43 2012-11-12    37.3785
-## 44 2012-11-13    25.4722
-## 45 2012-11-14        NaN
-## 46 2012-11-15     0.1424
-## 47 2012-11-16    18.8924
-## 48 2012-11-17    49.7882
-## 49 2012-11-18    52.4653
-## 50 2012-11-19    30.6979
-## 51 2012-11-20    15.5278
-## 52 2012-11-21    44.3993
-## 53 2012-11-22    70.9271
-## 54 2012-11-23    73.5903
-## 55 2012-11-24    50.2708
-## 56 2012-11-25    41.0903
-## 57 2012-11-26    38.7569
-## 58 2012-11-27    47.3819
-## 59 2012-11-28    35.3576
-## 60 2012-11-29    24.4688
-## 61 2012-11-30        NaN
-```
+Now, let's see take a look at the histogram of total number of steps taken each day with the new data.
 
 ```r
-summarise(group_by(activity, date), Median_Steps=median(steps, na.rm=TRUE))
+Totalsteps2<-summarise(group_by(Imp_activity, date), sum(steps))
+
+hist(Totalsteps2$sum, breaks=10, xlab="Total number of steps per day", main="Histogram of Total number of steps taken per day with simulated")
 ```
 
-```
-## Source: local data frame [61 x 2]
-## 
-##          date Median_Steps
-## 1  2012-10-01           NA
-## 2  2012-10-02            0
-## 3  2012-10-03            0
-## 4  2012-10-04            0
-## 5  2012-10-05            0
-## 6  2012-10-06            0
-## 7  2012-10-07            0
-## 8  2012-10-08           NA
-## 9  2012-10-09            0
-## 10 2012-10-10            0
-## 11 2012-10-11            0
-## 12 2012-10-12            0
-## 13 2012-10-13            0
-## 14 2012-10-14            0
-## 15 2012-10-15            0
-## 16 2012-10-16            0
-## 17 2012-10-17            0
-## 18 2012-10-18            0
-## 19 2012-10-19            0
-## 20 2012-10-20            0
-## 21 2012-10-21            0
-## 22 2012-10-22            0
-## 23 2012-10-23            0
-## 24 2012-10-24            0
-## 25 2012-10-25            0
-## 26 2012-10-26            0
-## 27 2012-10-27            0
-## 28 2012-10-28            0
-## 29 2012-10-29            0
-## 30 2012-10-30            0
-## 31 2012-10-31            0
-## 32 2012-11-01           NA
-## 33 2012-11-02            0
-## 34 2012-11-03            0
-## 35 2012-11-04           NA
-## 36 2012-11-05            0
-## 37 2012-11-06            0
-## 38 2012-11-07            0
-## 39 2012-11-08            0
-## 40 2012-11-09           NA
-## 41 2012-11-10           NA
-## 42 2012-11-11            0
-## 43 2012-11-12            0
-## 44 2012-11-13            0
-## 45 2012-11-14           NA
-## 46 2012-11-15            0
-## 47 2012-11-16            0
-## 48 2012-11-17            0
-## 49 2012-11-18            0
-## 50 2012-11-19            0
-## 51 2012-11-20            0
-## 52 2012-11-21            0
-## 53 2012-11-22            0
-## 54 2012-11-23            0
-## 55 2012-11-24            0
-## 56 2012-11-25            0
-## 57 2012-11-26            0
-## 58 2012-11-27            0
-## 59 2012-11-28            0
-## 60 2012-11-29            0
-## 61 2012-11-30           NA
+![plot of chunk unnamed-chunk-8](./PA1_template_files/figure-html/unnamed-chunk-8.png) 
+
+Then calculate the mean and median.
+
+```r
+meansteps2<-mean(Totalsteps2[[2]])
+
+mediansteps2<-median(Totalsteps2[[2]])
 ```
 
-## What is the average daily activity pattern?
+Now, the mean total number of steps per day is 1.0766 &times; 10<sup>4</sup>, and the median number of steps per day is 1.0762 &times; 10<sup>4</sup>.
+It doesn't look like the data is really that much different, both the mean and median are barely affected by us filling in the missing datas with a guess.
+
+## 5. Are there differences in activity patterns between weekdays and weekends?
+
+We now create a new factor dayorend, where Weekend and Weekday are the 2 factors, and a new column added to specify whether the data is collected on weekend or weekday.
 
 
+```r
+dayorend<-Imp_activity$Wday
+dayorend[Imp_activity$Wday != c(1,7)] <-"Weekday"
+dayorend[Imp_activity$Wday == c(1,7)] <-"Weekend"
+IActivity<-cbind(Imp_activity,dayorend)
+```
 
-## Imputing missing values
+Finally, we calculate the mean steps taken during each interval for Weekend or Weekday and plot them using ggplot2 system.
 
 
+```r
+int_mean2<-summarise(group_by(IActivity,dayorend,interval), Interval_mean=mean(steps))
+g <- qplot(interval, Interval_mean, data = int_mean2, facets = dayorend ~ .)
+p <- g + geom_point(color = "dark red") +
+     geom_line(color = "dark red") +
+     labs(x = "Interval [Minutes]") +
+     labs(y = expression("Average number of steps per interval across all days [Steps]")) +
+     labs(title ="Average number of steps per interval across all days per day type")
+ 
+print(p)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+![plot of chunk unnamed-chunk-11](./PA1_template_files/figure-html/unnamed-chunk-11.png) 
+
+
