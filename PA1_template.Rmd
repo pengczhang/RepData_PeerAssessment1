@@ -9,9 +9,25 @@ output:
 
 ## Loading and preprocessing the data
 
+```{r}
+act1<-read.csv("./activity.csv")
+library(dplyr)
+library(lubridate)
+activity<-tbl_df(act1)
+rm("act1")
+activity<-mutate(activity, Year=year(date), Month=month(date), Mday=mday(date),Wday=wday(date))
+```
+
 
 
 ## What is mean total number of steps taken per day?
+
+summarise(group_by(activity, date), sum(steps))
+
+summarise(group_by(activity, date), Mean_Steps=mean(steps, na.rm=TRUE))
+
+summarise(group_by(activity, date), Median_Steps=median(steps, na.rm=TRUE))
+
 
 
 
